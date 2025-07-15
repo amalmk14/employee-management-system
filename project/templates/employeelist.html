@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Employee List</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 900px; margin: auto; }
+    input, button { margin: 5px 0; padding: 8px; width: 100%; }
+    .employee-block { margin-bottom: 15px; border-bottom: 1px solid #ccc; padding: 10px 0; }
+    .btn { padding: 8px 14px; background: #333; color: white; border: none; cursor: pointer; width: auto; }
+  </style>
+</head>
+<body>
+  <h2>All Employees</h2>
+  <input type="text" id="searchInput" placeholder="Search employees...">
+  <button class="btn" onclick="loadEmployees()">Search</button>
+  <div id="employeeList"></div>
+
+  <script>
+    const api = '/api/employees';
+
+    function getToken() {
+      return localStorage.getItem('access');
+    }
+
+    function setHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      };
+    }
+
+    async function loadEmployees() {
+      const q = document.getElementById('searchInput').value;
+      const res = await fetch(`${api}/employees/?search=${q}`, {
+        headers: setHeaders()
+      });
+      const employees = await res.json();
+      const container = document.getElementById('employeeList');
+      container.innerHTML = '';
+      employees.forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'employee-block';
+        div.innerHTML = `<strong>ID:</strong> ${e.id} <br>` +
+          Object.entries(e.data).map(([k, v]) => `<strong>${k}:</strong> ${v}`).join('<br>') +
+          `<br><button class='btn' onclick="deleteEmployee(${e.id})">Delete</button>`;
+        container.appendChild(div);
+      });
+    }
+
+    async function deleteEmployee(id) {
+      await fetch(`${api}/employees/${id}/`, {
+        method: 'DELETE',
+        headers: setHeaders()
+      });
+      alert('Deleted');
+      loadEmployees();
+    }
+
+    if (getToken()) {
+      loadEmployees();
+    }
+  </script>
+</body>
+</html>
