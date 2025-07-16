@@ -1,12 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login and Signup</title>
+  <title>Login, Signup & Profile</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 400px; margin: auto; padding: 20px; }
-    input, button { display: block; width: 100%; padding: 8px; margin: 10px 0; }
-    button { background-color: #333; color: #fff; border: none; cursor: pointer; }
-    .section { margin-bottom: 40px; }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: auto; 
+      padding: 20px; 
+    }
+    input, button { 
+      display: block;
+      width: 100%; 
+      padding: 8px; 
+      margin: 10px 0; 
+    }
+    button { 
+      background-color: #333; 
+      color: #fff; 
+      border: none; 
+      cursor: pointer; 
+    }
+    .section { 
+      margin-bottom: 40px; 
+    }
   </style>
 </head>
 <body>
@@ -25,8 +42,19 @@
     <button onclick="signupUser()">Signup</button>
   </div>
 
+  <div class="section" id="profileSection" style="display:none;">
+    <h2>Profile</h2>
+    <p><strong>Username:</strong> <span id="profileUsername"></span></p>
+    <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+    <button onclick="loadProfile()">Refresh Profile</button>
+  </div>
+
   <script>
     const API_BASE = '/api/accounts';
+
+    function getToken() {
+      return localStorage.getItem('access');
+    }
 
     async function loginUser() {
       const response = await fetch(`${API_BASE}/login/`, {
@@ -41,6 +69,8 @@
       if (data.access) {
         localStorage.setItem('access', data.access);
         alert('Login successful');
+        document.getElementById('profileSection').style.display = 'block';
+        loadProfile();
       } else {
         alert('Login failed');
       }
@@ -61,6 +91,15 @@
       } else {
         alert('Signup failed');
       }
+    }
+
+    async function loadProfile() {
+      const res = await fetch(`${API_BASE}/profile/`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      const data = await res.json();
+      document.getElementById('profileUsername').textContent = data.username;
+      document.getElementById('profileEmail').textContent = data.email;
     }
   </script>
 </body>

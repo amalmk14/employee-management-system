@@ -4,26 +4,30 @@ from .models import *
 from .serializers import *
 
 # Create your views here.
-def FormBuilder(request):
-    return render(request,"formbuilder.html")
+def FormPage(request):
+    return render(request,"form.html")
 
 def EmployeeList(request):
     return render(request,"employeelist.html")
 
-class DynamicFormListCreate(generics.ListCreateAPIView):
+from rest_framework.response import Response
+from rest_framework import status
+
+
+class FormListCreate(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = DynamicFormSerializer
+    serializer_class = FormSerializer
 
     def get_queryset(self):
-        return DynamicForm.objects.filter(created_by=self.request.user)
+        return Form.objects.filter(created_by=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 
-class DynamicFormDetail(generics.RetrieveUpdateDestroyAPIView):
+class FormDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    queryset = DynamicForm.objects.all()
-    serializer_class = DynamicFormSerializer
+    queryset = Form.objects.all()
+    serializer_class = FormSerializer
 
 class EmployeeListCreate(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]

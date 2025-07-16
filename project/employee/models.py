@@ -11,7 +11,7 @@ FIELD_TYPES = [
     ('password', 'Password'),
 ]
 
-class DynamicForm(models.Model):
+class Form(models.Model):
     name = models.CharField(max_length=255)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -19,8 +19,8 @@ class DynamicForm(models.Model):
     def __str__(self):
         return self.name
 
-class DynamicField(models.Model):
-    form = models.ForeignKey(DynamicForm, on_delete=models.CASCADE, related_name='fields')
+class FormField(models.Model):
+    form = models.ForeignKey(Form, on_delete=models.CASCADE, related_name='fields')
     label = models.CharField(max_length=255)
     field_type = models.CharField(choices=FIELD_TYPES, max_length=20)
     order = models.PositiveIntegerField(default=0)
@@ -29,7 +29,7 @@ class DynamicField(models.Model):
         return f"{self.label} ({self.field_type})"
 
 class Employee(models.Model):
-    form = models.ForeignKey(DynamicForm, on_delete=models.SET_NULL, null=True)
+    form = models.ForeignKey(Form, on_delete=models.SET_NULL, null=True)
     data = models.JSONField()
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)

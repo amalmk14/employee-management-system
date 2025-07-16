@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Form</title>
+  <style>
+    body { 
+      font-family: sans-serif; 
+      padding: 20px; 
+      max-width: 800px; 
+      margin: auto; 
+    }
+    input, select, button { 
+      margin: 5px 0; 
+      padding: 8px; 
+      width: 100%; 
+    }
+    .field-block { 
+      margin-bottom: 10px; 
+      background: #f1f1f1; 
+      padding: 10px; 
+      cursor: move; 
+    }
+    .btn { 
+      padding: 8px 14px; 
+      background: #333; 
+      color: white; 
+      border: none; 
+      cursor: pointer; 
+      width: auto; 
+    }
+  </style>
+</head>
+<body>
+  <h2>Create New Form</h2>
+  <input type="text" id="formName" placeholder="Enter Form Name">
+  <div id="fields"></div>
+  <button class="btn" onclick="addField()">Add Field</button>
+  <button class="btn" onclick="saveForm()">Save Form</button>
+
+  <h2>Update Existing Form</h2>
+  <select id="formList" onchange="loadFormFields()"></select>
+  <div id="editFields"></div>
+  <button class="btn" onclick="updateForm()">Update Form</button>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+  <script>
+    const api = '/api/employees';
+
+    function getToken() {
+      return localStorage.getItem('access');
+    }
+
+    function setHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      };
+    }
+
+    function addField(containerId = 'fields') {
+      const div = document.createElement('div');
+      div.className = 'field-block';
+      div.innerHTML = `
+        <input placeholder="Label" class="label">
+        <select class="type">
+          <option value="text">Text</option>
+          <option value="number">Number</option>
+          <option value="date">Date</option>
+          <option value="password">Password</option>
+        </select>
+        <button onclick="this.parentElement.remove()">Remove</button>
+      `;
+      document.getElementById(containerId).appendChild(div);
+    }
+
+    async function saveForm() {
+      const blocks = [...document.querySelectorAll('#fields .field-block')];
+      const fields = blocks.map((el, i) => ({
+        label: el.querySelector('.label').value,
+        field_type: el.querySelector('.type').value,
+        order: i
+      }));
+      const name = document.getElementById('formName').value;
+      await fetch(`${api}/forms/`, {
+        method: 'POST',
+        headers: setHeaders(),
+        body: JSON.stringify({ name, fields })
+      });
+      alert('Form saved!');
+      loadForms();
+    }
+
+    async function loadForms() {
+      const res = await fetch(`${api}/forms/`, { headers: setHeaders() });
+      const forms = await res.json();
+      const select = document.getElementById('formList');
+      select.innerHTML = '';
+      forms.forEach(form => {
+        const opt = document.createElement('option');
+        opt.value = form.id;
+        opt.textContent = form.name;
+        select.appendChild(opt);
+      });
+      if (forms.length) loadFormFields();
+    }
+
+    async function loadFormFields() {
+      const formId = document.getElementById('formList').value;
+      const res = await fetch(`${api}/forms/${formId}/`, { headers: setHeaders() });
+      const form = await res.json();
+      const container = document.getElementById('editFields');
+      container.innerHTML = '';
+      form.fields.forEach(field => {
+        const div = document.createElement('div');
+        div.className = 'field-block';
+        div.innerHTML = `
+          <input class="label" value="${field.label}" placeholder="Label">
+          <select class="type">
+            <option value="text" ${field.field_type === 'text' ? 'selected' : ''}>Text</option>
+            <option value="number" ${field.field_type === 'number' ? 'selected' : ''}>Number</option>
+            <option value="date" ${field.field_type === 'date' ? 'selected' : ''}>Date</option>
+            <option value="password" ${field.field_type === 'password' ? 'selected' : ''}>Password</option>
+          </select>
+          <button onclick="this.parentElement.remove()">Remove Fields</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function updateForm() {
+      const formId = document.getElementById('formList').value;
+      const blocks = [...document.querySelectorAll('#editFields .field-block')];
+      const fields = blocks.map((el, i) => ({
+        label: el.querySelector('.label').value,
+        field_type: el.querySelector('.type').value,
+        order: i
+      }));
+      await fetch(`${api}/forms/${formId}/`, {
+        method: 'PUT',
+        headers: setHeaders(),
+        body: JSON.stringify({ name: "Updated Form", fields })
+      });
+      alert('Form updated!');
+    }
+
+    new Sortable(document.getElementById('fields'), { animation: 150 });
+    new Sortable(document.getElementById('editFields'), { animation: 150 });
+    loadForms();
+  </script>
+</body>
+</html>
