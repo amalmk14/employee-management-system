@@ -26,23 +26,12 @@ class FormSerializer(serializers.ModelSerializer):
             FormField.objects.create(form=form, **field)
         return form
 
-    # def update(self, instance, validated_data):
-    #     fields_data = validated_data.pop('fields', [])
-    #     instance.name = validated_data.get('name', instance.name)
-    #     instance.save()
-    #     instance.fields.all().delete()
-    #     for field in fields_data:
-    #         FormField.objects.create(form=instance, **field)
-    #     return instance
-
     def update(self, instance, validated_data):
-        fields_data = validated_data.pop('fields', None)  # use None instead of []
+        fields_data = validated_data.pop('fields', None) 
 
-        # Update the form name
         instance.name = validated_data.get('name', instance.name)
         instance.save()
 
-        # Only update fields if 'fields' is present in the request
         if fields_data is not None:
             instance.fields.all().delete()
             for field in fields_data:
